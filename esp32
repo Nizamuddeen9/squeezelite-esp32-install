@@ -1,0 +1,41 @@
+// ESP32 ऑटोमैटिक वॉटर पंप कंट्रोल सिस्टम
+
+const int sensorPin = 34;  // सेंसर एनालॉग पिन
+const int relayPin = 12;   // रिले कंट्रोल पिन
+int sensorValue = 0;       // सेंसर रीडिंग स्टोर करने के लिए
+int dryValue = 2500;       // सूखी मिट्टी का वैल्यू (कैलिब्रेट करें)
+int wetValue = 1000;       // गीली मिट्टी का वैल्यू (कैलिब्रेट करें)
+int threshold = 50;        // पानी देने का थ्रेशोल्ड (%)
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, HIGH); // शुरू में पंप OFF
+}
+
+void loop() {
+  // सेंसर से मिट्टी की नमी पढ़ें
+  sensorValue = analogRead(sensorPin);
+  
+  // नमी प्रतिशत में कन्वर्ट करें
+  int moisturePercent = map(sensorValue, dryValue, wetValue, 0, 100);
+  moisturePercent = constrain(moisturePercent, 0, 100);
+  
+  Serial.print("मिट्टी में नमी: ");
+  Serial.print(moisturePercent);
+  Serial.println("%");
+
+  // अगर नमी थ्रेशोल्ड से कम है तो पंप ON करें
+  if (moisturePercent < threshold) {
+    digitalWrite(relayPin, LOW);  // पंप ON
+    Serial.println("पंप चालू - पानी दिया जा रहा है");
+    delay(2000); // पानी देने का समय (समायोजित करें)
+    digitalWrite(relayPin, HIGH); // पंप OFF
+    Serial.println("पंप बंद");
+    
+    // पानी के अवशोषित होने का इंतजार करें
+    delay(5000);
+  }
+  
+  delay(1000); // अगली रीडिंग से पहले विलंब
+}
